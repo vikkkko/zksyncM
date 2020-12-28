@@ -1,0 +1,26 @@
+[
+  {
+    "address": "0x7EdA505653731EA8161BC4e0360fD121b299b65F",
+    "decimals": 18,
+    "symbol": "DAI",
+    "name": "Dai Stablecoin"
+  },
+  {
+    "address": "0x41E513D12dfdc0B4fecD4f7119E06f3277063cf1",
+    "decimals": 18,
+    "symbol": "BAT",
+    "name": "Basic Attention Token"
+  },
+  {
+    "name": "MINI Token",
+    "symbol": "MINI",
+    "decimals": 18,
+    "address": "0xE01b7aD70AE37d90eef750dE7E55d3ddb7081D91"
+  },
+  {
+    "name": "USDT token",
+    "symbol": "USDT",
+    "decimals": 18,
+    "address": "0xfAaf18034a7e4eBC1cc78d0E66894E47A1c62242"
+  }
+]
