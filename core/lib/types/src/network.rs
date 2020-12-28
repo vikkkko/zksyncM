@@ -26,6 +26,8 @@ pub enum Network {
     Localhost,
     /// Unknown network type.
     Unknown,
+    RopstenD,
+    RopstenT,
 }
 
 impl FromStr for Network {
@@ -37,6 +39,8 @@ impl FromStr for Network {
             "rinkeby" => Self::Rinkeby,
             "ropsten" => Self::Ropsten,
             "localhost" => Self::Localhost,
+            "ropstenD" => Self::RopstenD,
+            "ropstenT" => Self::RopstenT,
             another => return Err(another.to_owned()),
         })
     }
@@ -48,6 +52,8 @@ impl fmt::Display for Network {
             Self::Mainnet => write!(f, "mainnet"),
             Self::Rinkeby => write!(f, "rinkeby"),
             Self::Ropsten => write!(f, "ropsten"),
+            Self::RopstenD => write!(f, "ropstenD"),
+            Self::RopstenT => write!(f, "ropstenT"),
             Self::Localhost => write!(f, "localhost"),
             Self::Unknown => write!(f, "unknown"),
         }
@@ -60,6 +66,8 @@ impl Network {
         match self {
             Network::Mainnet => 1,
             Network::Ropsten => 3,
+            Network::RopstenD => 3,
+            Network::RopstenT => 3,
             Network::Rinkeby => 4,
             Network::Localhost => 9,
             Network::Unknown => panic!("Unknown chain ID"),

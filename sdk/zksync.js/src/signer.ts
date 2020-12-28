@@ -243,7 +243,7 @@ export class Signer {
             const network = await ethSigner.provider.getNetwork();
             chainID = network.chainId;
         }
-        let message = 'Access zkSync account.\n\nOnly sign this message for a trusted client!';
+        let message = 'Access miniDEX L2 account.\n\nOnly sign this message for a trusted client!';
         if (chainID !== 1) {
             message += `\nChain ID: ${chainID}.`;
         }

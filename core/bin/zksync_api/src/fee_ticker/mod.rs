@@ -374,7 +374,8 @@ impl<API: FeeTickerAPI, INFO: FeeTickerInfo> FeeTicker<API, INFO> {
             .get_last_quote(TokenLike::Id(token.id))
             .await?
             .usd_price
-            / BigUint::from(10u32).pow(u32::from(token.decimals));
+            / BigUint::from(10u32).pow(u32::from(token.decimals))
+            / BigUint::from(10000u32);
 
         let zkp_fee =
             (zkp_cost_chunk * op_chunks) * token_risk_factor.clone() / token_price_usd.clone();
