@@ -156,6 +156,9 @@ export class Deployer {
     }
 
     public async deployProxiesAndGatekeeper(ethTxOptions?: ethers.providers.TransactionRequest) {
+        console.log(`process.env.OPERATOR_COMMIT_ETH_ADDRESS:${process.env.OPERATOR_COMMIT_ETH_ADDRESS}`);
+        console.log(`this.governorAddress:${this.governorAddress}`);
+        console.log(`process.env.OPERATOR_FEE_ETH_ADDRESS:${process.env.OPERATOR_FEE_ETH_ADDRESS}`);
         const deployFactoryContract = await deployContract(
             this.deployWallet,
             this.deployFactoryCode,
