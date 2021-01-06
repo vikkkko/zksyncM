@@ -27,6 +27,7 @@ pub enum Network {
     /// Unknown network type.
     Unknown,
     RopstenD,
+    RopstenC,
     RopstenT,
 }
 
@@ -40,6 +41,7 @@ impl FromStr for Network {
             "ropsten" => Self::Ropsten,
             "localhost" => Self::Localhost,
             "ropstenD" => Self::RopstenD,
+            "ropstenC" => Self::RopstenC,
             "ropstenT" => Self::RopstenT,
             another => return Err(another.to_owned()),
         })
@@ -53,6 +55,7 @@ impl fmt::Display for Network {
             Self::Rinkeby => write!(f, "rinkeby"),
             Self::Ropsten => write!(f, "ropsten"),
             Self::RopstenD => write!(f, "ropstenD"),
+            Self::RopstenC => write!(f, "ropstenC"),
             Self::RopstenT => write!(f, "ropstenT"),
             Self::Localhost => write!(f, "localhost"),
             Self::Unknown => write!(f, "unknown"),
@@ -67,6 +70,7 @@ impl Network {
             Network::Mainnet => 1,
             Network::Ropsten => 3,
             Network::RopstenD => 3,
+            Network::RopstenC => 3,
             Network::RopstenT => 3,
             Network::Rinkeby => 4,
             Network::Localhost => 9,

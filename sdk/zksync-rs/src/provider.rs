@@ -25,6 +25,7 @@ pub fn get_rpc_addr(network: Network) -> &'static str {
         Network::Mainnet => "https://api.zksync.io/jsrpc",
         Network::Rinkeby => "https://rinkeby-api.zksync.io/jsrpc",
         Network::Ropsten => "http://127.0.0.1:3030",
+        Network::RopstenC => "http://47.241.57.234:3030",
         Network::RopstenD => "http://47.241.13.124:3030",
         Network::RopstenT => "http://161.117.187.126:3030",
         Network::Localhost => "http://127.0.0.1:3030",

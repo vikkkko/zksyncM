@@ -7,6 +7,7 @@ import { ALL_NETWORKS, Network, Config, AccountInfo, TxInfo, TxDetails } from '.
 export function apiServer(network: Network) {
     const servers = {
         localhost: 'http://localhost:3001',
+        ropstenC: '47.241.57.234:3001',
         ropstenD: '47.241.13.124:3001',
         ropstenT: '161.117.187.126:3001',
         ropsten: '161.117.187.126:3001',
