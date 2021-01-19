@@ -16,8 +16,9 @@ use self::records::{
 use crate::{
     chain::operations::{
         records::{
-            NewExecutedPriorityOperation, NewExecutedTransaction, NewOperation,
-            StoredExecutedPriorityOperation, StoredExecutedTransaction, StoredOperation,
+            NewExecutedPriorityOperation, NewExecutedTransaction,
+            NewExecutedTxAndPriorityOperation, NewOperation, StoredExecutedPriorityOperation,
+            StoredExecutedTransaction, StoredOperation,
         },
         OperationsSchema,
     },
@@ -89,17 +90,35 @@ impl<'a, 'c> BlockSchema<'a, 'c> {
             match block_tx {
                 ExecutedOperations::Tx(tx) => {
                     // Store the executed operation in the corresponding schema.
-                    let new_tx = NewExecutedTransaction::prepare_stored_tx(*tx, block_number);
+                    let new_tx =
+                        NewExecutedTransaction::prepare_stored_tx(*tx.clone(), block_number);
                     OperationsSchema(self.0).store_executed_tx(new_tx).await?;
+
+                    let new_tx_and_priority_op =
+                        NewExecutedTxAndPriorityOperation::prepare_stored_data_from_tx(
+                            *tx.clone(),
+                            block_number,
+                        );
+                    OperationsSchema(self.0)
+                        .store_executed_tx_and_priority_op(new_tx_and_priority_op)
+                        .await?;
                 }
                 ExecutedOperations::PriorityOp(prior_op) => {
                     // For priority operation we should only store it in the Operations schema.
                     let new_priority_op = NewExecutedPriorityOperation::prepare_stored_priority_op(
-                        *prior_op,
+                        *prior_op.clone(),
                         block_number,
                     );
                     OperationsSchema(self.0)
                         .store_executed_priority_op(new_priority_op)
+                        .await?;
+                    let new_tx_and_priority_op =
+                        NewExecutedTxAndPriorityOperation::prepare_stored_data_from_priority_op(
+                            *prior_op.clone(),
+                            block_number,
+                        );
+                    OperationsSchema(self.0)
+                        .store_executed_tx_and_priority_op(new_tx_and_priority_op)
                         .await?;
                 }
             }

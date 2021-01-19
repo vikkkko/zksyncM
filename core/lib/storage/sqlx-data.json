@@ -735,6 +735,35 @@
       "nullable": []
     }
   },
+  "7bb3bb6101d845aba42e1f1387a4d0f5aa22d6611cf537d075ed50069c4c7d80": {
+    "query": "INSERT INTO executed_tx_and_priority_operations (priority_op_serialid, deadline_block, eth_block, tx, success, fail_reason, primary_account_address, nonce, eth_sign_data, batch_id, eth_or_tx_hash, block_number, block_index, operation, op_type, from_account, to_account, created_at)\n                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)\n                    ON CONFLICT (eth_or_tx_hash)\n                    DO NOTHING",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8",
+          "Int8",
+          "Jsonb",
+          "Bool",
+          "Text",
+          "Bytea",
+          "Int8",
+          "Jsonb",
+          "Int8",
+          "Bytea",
+          "Int8",
+          "Int4",
+          "Jsonb",
+          "Int8",
+          "Bytea",
+          "Bytea",
+          "Timestamptz"
+        ]
+      },
+      "nullable": []
+    }
+  },
   "2a64cf1b6a9b36c4dcb9ef0510c69792a0f3e67ce5f09d30497315368268afb8": {
     "query": "SELECT operations.* FROM eth_ops_binding\n                LEFT JOIN operations ON operations.id = op_id\n                WHERE eth_op_id = $1",
     "describe": {
@@ -1464,6 +1493,127 @@
       "parameters": {
         "Left": [
           "Int8"
+        ]
+      },
+      "nullable": [
+        null
+      ]
+    }
+  },
+  "57e4b53d2028adebdb09d85b6233150b3a84cd0f45f48a7b65c2cb4d51fceae3": {
+    "query": "SELECT COUNT(*) FROM executed_tx_and_priority_operations",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "count",
+          "type_info": "Int8"
+        }
+      ],
+      "parameters": {
+        "Left": [
+        ]
+      },
+      "nullable": [
+        null
+      ]
+    }
+  },
+  "1b9c4fe9cbed05a9ab456ece60d1aaba64f6571eebdd9661c32f89f406e45476": {
+    "query": "SELECT COUNT(*) FROM executed_tx_and_priority_operations where from_account = $1",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "count",
+          "type_info": "Int8"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Bytea"
+        ]
+      },
+      "nullable": [
+        null
+      ]
+    }
+  },
+  "1310856cd7f1887adc0d702e85e165fc3992fa656a0342c74ad487c13773dd02": {
+    "query": "SELECT COUNT(*) FROM executed_tx_and_priority_operations where to_account = $1",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "count",
+          "type_info": "Int8"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Bytea"
+        ]
+      },
+      "nullable": [
+        null
+      ]
+    }
+  },
+  "34230044c0a7b03425e41526ef69158be4d520645c93c287c74d6c435a03b6ba": {
+    "query": "SELECT COUNT(*) FROM executed_tx_and_priority_operations WHERE op_type = $1",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "count",
+          "type_info": "Int8"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int8"
+        ]
+      },
+      "nullable": [
+        null
+      ]
+    }
+  },
+  "0de384330ffac0df333b4a25bb1c0aaf323132cc6f0f82c0d054d1f2821d3229": {
+    "query": "SELECT COUNT(*) FROM executed_tx_and_priority_operations WHERE op_type = $1 and from_account = $2",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "count",
+          "type_info": "Int8"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Bytea"
+        ]
+      },
+      "nullable": [
+        null
+      ]
+    }
+  },
+  "3ed0c3226c461639a7f076bcd45770849d8df0e7b7a3db886f19b93667f1ecd5": {
+    "query": "SELECT COUNT(*) FROM executed_tx_and_priority_operations WHERE op_type = $1 and to_account = $2",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "count",
+          "type_info": "Int8"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Bytea"
         ]
       },
       "nullable": [
@@ -3581,6 +3731,751 @@
         false,
         false,
         false,
+        false
+      ]
+    }
+  },
+  "9d7b71ff462653d442114fbe238215d601ff8e5e69fa0b9b8c48e8e50c061a90": {
+    "query": "SELECT * FROM executed_tx_and_priority_operations WHERE op_type = $1 order by created_at desc limit $2 offset $3",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "priority_op_serialid",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 1,
+          "name": "deadline_block",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 2,
+          "name": "eth_block",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 3,
+          "name": "tx",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 4,
+          "name": "success",
+          "type_info": "Bool"
+        },
+        {
+          "ordinal": 5,
+          "name": "fail_reason",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 6,
+          "name": "primary_account_address",
+          "type_info": "Bytea"
+        },
+        {
+          "ordinal": 7,
+          "name": "nonce",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 8,
+          "name": "eth_sign_data",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 9,
+          "name": "batch_id",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 10,
+          "name": "eth_or_tx_hash",
+          "type_info": "Bytea"
+        },
+        {
+          "ordinal": 11,
+          "name": "block_number",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 12,
+          "name": "block_index",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 13,
+          "name": "operation",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 14,
+          "name": "op_type",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 15,
+          "name": "from_account",
+          "type_info": "Bytea"
+        },
+        {
+          "ordinal": 16,
+          "name": "to_account",
+          "type_info": "Bytea"
+        },
+        {
+          "ordinal": 17,
+          "name": "created_at",
+          "type_info": "Timestamptz"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8",
+          "Int8"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        true,
+        true,
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        true,
+        false
+      ]
+    }
+  },
+  "1fb30eafc9674dd47c2ff86c09280473c21c5823780b64f222ce5a34538b82cb": {
+    "query": "SELECT * FROM executed_tx_and_priority_operations where from_account = $1 order by created_at desc limit $2 offset $3",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "priority_op_serialid",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 1,
+          "name": "deadline_block",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 2,
+          "name": "eth_block",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 3,
+          "name": "tx",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 4,
+          "name": "success",
+          "type_info": "Bool"
+        },
+        {
+          "ordinal": 5,
+          "name": "fail_reason",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 6,
+          "name": "primary_account_address",
+          "type_info": "Bytea"
+        },
+        {
+          "ordinal": 7,
+          "name": "nonce",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 8,
+          "name": "eth_sign_data",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 9,
+          "name": "batch_id",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 10,
+          "name": "eth_or_tx_hash",
+          "type_info": "Bytea"
+        },
+        {
+          "ordinal": 11,
+          "name": "block_number",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 12,
+          "name": "block_index",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 13,
+          "name": "operation",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 14,
+          "name": "op_type",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 15,
+          "name": "from_account",
+          "type_info": "Bytea"
+        },
+        {
+          "ordinal": 16,
+          "name": "to_account",
+          "type_info": "Bytea"
+        },
+        {
+          "ordinal": 17,
+          "name": "created_at",
+          "type_info": "Timestamptz"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Bytea",
+          "Int8",
+          "Int8"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        true,
+        true,
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        true,
+        false
+      ]
+    }
+  },
+  "60247a35eb593df9782495556398594bd096d611a8106897d0c39b18a72dadf9": {
+    "query": "SELECT * FROM executed_tx_and_priority_operations where to_account = $1 order by created_at desc limit $2 offset $3",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "priority_op_serialid",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 1,
+          "name": "deadline_block",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 2,
+          "name": "eth_block",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 3,
+          "name": "tx",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 4,
+          "name": "success",
+          "type_info": "Bool"
+        },
+        {
+          "ordinal": 5,
+          "name": "fail_reason",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 6,
+          "name": "primary_account_address",
+          "type_info": "Bytea"
+        },
+        {
+          "ordinal": 7,
+          "name": "nonce",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 8,
+          "name": "eth_sign_data",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 9,
+          "name": "batch_id",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 10,
+          "name": "eth_or_tx_hash",
+          "type_info": "Bytea"
+        },
+        {
+          "ordinal": 11,
+          "name": "block_number",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 12,
+          "name": "block_index",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 13,
+          "name": "operation",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 14,
+          "name": "op_type",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 15,
+          "name": "from_account",
+          "type_info": "Bytea"
+        },
+        {
+          "ordinal": 16,
+          "name": "to_account",
+          "type_info": "Bytea"
+        },
+        {
+          "ordinal": 17,
+          "name": "created_at",
+          "type_info": "Timestamptz"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Bytea",
+          "Int8",
+          "Int8"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        true,
+        true,
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        true,
+        false
+      ]
+    }
+  },
+  "6c0661cc424e0a1c18c495badf32a344abd03430a668cffed9f826241427f702": {
+    "query": "SELECT * FROM executed_tx_and_priority_operations WHERE from_account = $1 and op_type = $2 order by created_at desc limit $3 offset $4",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "priority_op_serialid",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 1,
+          "name": "deadline_block",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 2,
+          "name": "eth_block",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 3,
+          "name": "tx",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 4,
+          "name": "success",
+          "type_info": "Bool"
+        },
+        {
+          "ordinal": 5,
+          "name": "fail_reason",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 6,
+          "name": "primary_account_address",
+          "type_info": "Bytea"
+        },
+        {
+          "ordinal": 7,
+          "name": "nonce",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 8,
+          "name": "eth_sign_data",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 9,
+          "name": "batch_id",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 10,
+          "name": "eth_or_tx_hash",
+          "type_info": "Bytea"
+        },
+        {
+          "ordinal": 11,
+          "name": "block_number",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 12,
+          "name": "block_index",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 13,
+          "name": "operation",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 14,
+          "name": "op_type",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 15,
+          "name": "from_account",
+          "type_info": "Bytea"
+        },
+        {
+          "ordinal": 16,
+          "name": "to_account",
+          "type_info": "Bytea"
+        },
+        {
+          "ordinal": 17,
+          "name": "created_at",
+          "type_info": "Timestamptz"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Bytea",
+          "Int8",
+          "Int8",
+          "Int8"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        true,
+        true,
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        true,
+        false
+      ]
+    }
+  },
+  "13d4ec005f594f0b662ec9b8d752d9e92de5c41e32220f2253876dba4399d212": {
+    "query": "SELECT * FROM executed_tx_and_priority_operations WHERE to_account = $1 and op_type = $2 order by created_at desc limit $3 offset $4",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "priority_op_serialid",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 1,
+          "name": "deadline_block",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 2,
+          "name": "eth_block",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 3,
+          "name": "tx",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 4,
+          "name": "success",
+          "type_info": "Bool"
+        },
+        {
+          "ordinal": 5,
+          "name": "fail_reason",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 6,
+          "name": "primary_account_address",
+          "type_info": "Bytea"
+        },
+        {
+          "ordinal": 7,
+          "name": "nonce",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 8,
+          "name": "eth_sign_data",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 9,
+          "name": "batch_id",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 10,
+          "name": "eth_or_tx_hash",
+          "type_info": "Bytea"
+        },
+        {
+          "ordinal": 11,
+          "name": "block_number",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 12,
+          "name": "block_index",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 13,
+          "name": "operation",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 14,
+          "name": "op_type",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 15,
+          "name": "from_account",
+          "type_info": "Bytea"
+        },
+        {
+          "ordinal": 16,
+          "name": "to_account",
+          "type_info": "Bytea"
+        },
+        {
+          "ordinal": 17,
+          "name": "created_at",
+          "type_info": "Timestamptz"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Bytea",
+          "Int8",
+          "Int8",
+          "Int8"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        true,
+        true,
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        true,
+        false
+      ]
+    }
+  },
+  "406d33a1e67526b81ce87e1e92317afebe3d2047c43e3ba75d141aa4503e223d": {
+    "query": "SELECT * FROM executed_tx_and_priority_operations order by created_at desc limit $1 offset $2",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "priority_op_serialid",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 1,
+          "name": "deadline_block",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 2,
+          "name": "eth_block",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 3,
+          "name": "tx",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 4,
+          "name": "success",
+          "type_info": "Bool"
+        },
+        {
+          "ordinal": 5,
+          "name": "fail_reason",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 6,
+          "name": "primary_account_address",
+          "type_info": "Bytea"
+        },
+        {
+          "ordinal": 7,
+          "name": "nonce",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 8,
+          "name": "eth_sign_data",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 9,
+          "name": "batch_id",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 10,
+          "name": "eth_or_tx_hash",
+          "type_info": "Bytea"
+        },
+        {
+          "ordinal": 11,
+          "name": "block_number",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 12,
+          "name": "block_index",
+          "type_info": "Int4"
+        },
+        {
+          "ordinal": 13,
+          "name": "operation",
+          "type_info": "Jsonb"
+        },
+        {
+          "ordinal": 14,
+          "name": "op_type",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 15,
+          "name": "from_account",
+          "type_info": "Bytea"
+        },
+        {
+          "ordinal": 16,
+          "name": "to_account",
+          "type_info": "Bytea"
+        },
+        {
+          "ordinal": 17,
+          "name": "created_at",
+          "type_info": "Timestamptz"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8"
+        ]
+      },
+      "nullable": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        true,
+        true,
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        true,
         false
       ]
     }

@@ -1,10 +1,22 @@
 //! Set of all the operations supported by the zkSync network.
 
-use super::ZkSyncTx;
-use crate::ZkSyncPriorityOp;
 use anyhow::format_err;
 use serde::{Deserialize, Serialize};
+
+use zksync_basic_types::AccountId;
 use zksync_crypto::params::CHUNK_BYTES;
+
+use crate::ZkSyncPriorityOp;
+
+use super::ZkSyncTx;
+
+#[doc(hidden)]
+pub use self::close_op::CloseOp;
+pub use self::{
+    change_pubkey_op::ChangePubKeyOp, deposit_op::DepositOp, forced_exit::ForcedExitOp,
+    full_exit_op::FullExitOp, noop_op::NoopOp, transfer_op::TransferOp,
+    transfer_to_new_op::TransferToNewOp, withdraw_op::WithdrawOp,
+};
 
 mod change_pubkey_op;
 mod close_op;
@@ -15,15 +27,6 @@ mod noop_op;
 mod transfer_op;
 mod transfer_to_new_op;
 mod withdraw_op;
-
-#[doc(hidden)]
-pub use self::close_op::CloseOp;
-pub use self::{
-    change_pubkey_op::ChangePubKeyOp, deposit_op::DepositOp, forced_exit::ForcedExitOp,
-    full_exit_op::FullExitOp, noop_op::NoopOp, transfer_op::TransferOp,
-    transfer_to_new_op::TransferToNewOp, withdraw_op::WithdrawOp,
-};
-use zksync_basic_types::AccountId;
 
 /// zkSync network operation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -46,6 +49,20 @@ pub enum ZkSyncOp {
 }
 
 impl ZkSyncOp {
+    pub fn get_type(&self) -> i64 {
+        match self {
+            ZkSyncOp::Noop(_) => 1,
+            ZkSyncOp::Deposit(_) => 2,
+            ZkSyncOp::TransferToNew(_) => 3,
+            ZkSyncOp::Withdraw(_) => 4,
+            ZkSyncOp::Close(_) => 5,
+            ZkSyncOp::Transfer(_) => 6,
+            ZkSyncOp::FullExit(_) => 7,
+            ZkSyncOp::ChangePubKeyOffchain(_) => 8,
+            ZkSyncOp::ForcedExit(_) => 9,
+        }
+    }
+
     /// Returns the number of block chunks required for the operation.
     pub fn chunks(&self) -> usize {
         match self {

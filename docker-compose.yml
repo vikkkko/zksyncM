@@ -5,18 +5,18 @@ services:
     ports:
       - "5432:5432"
     volumes:
-    - type: bind
-      source: ./volumes/postgres
-      target: /var/lib/postgresql/data
+      - type: bind
+        source: ./volumes/postgres
+        target: /var/lib/postgresql/data
     environment:
-        - POSTGRES_HOST_AUTH_METHOD=trust
+      - POSTGRES_HOST_AUTH_METHOD=trust
   tesseracts:
     image: "adria0/tesseracts"
     command: --cfg /tesseracts.toml -vvv
     ports:
       - "8000:8000"
     volumes:
-    - ./etc/tesseracts/tesseracts.toml:/tesseracts.toml
-    - type: bind
-      source: ./volumes/tesseracts
-      target: /var/lib/tesseracts/data
+      - ./etc/tesseracts/tesseracts.toml:/tesseracts.toml
+      - type: bind
+        source: ./volumes/tesseracts
+        target: /var/lib/tesseracts/data

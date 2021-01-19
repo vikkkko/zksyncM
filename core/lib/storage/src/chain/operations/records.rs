@@ -1,7 +1,9 @@
 // External imports
 use chrono::prelude::*;
+use serde::{Deserialize, Serialize};
 use serde_json::value::Value;
 use sqlx::FromRow;
+
 // Workspace imports
 // Local imports
 
@@ -46,6 +48,34 @@ pub struct StoredExecutedTransaction {
     pub batch_id: Option<i64>,
 }
 
+#[derive(Debug, FromRow, Deserialize, Serialize, Clone, PartialEq)]
+pub struct StoredExecutedTxAndPriorityOperation {
+    //layer1
+    pub priority_op_serialid: i64,
+    pub deadline_block: i64,
+    pub eth_block: i64,
+
+    //layer2
+    pub tx: Value,
+    pub success: bool,
+    pub fail_reason: Option<String>,
+    pub primary_account_address: Vec<u8>,
+    pub nonce: i64,
+    pub eth_sign_data: Option<serde_json::Value>,
+    pub batch_id: Option<i64>,
+
+    //common
+    pub eth_or_tx_hash: Vec<u8>,
+    //eth_hash or tx_hash
+    pub block_number: i64,
+    pub block_index: Option<i32>,
+    pub operation: Value,
+    pub op_type: i64,
+    pub from_account: Vec<u8>,
+    pub to_account: Option<Vec<u8>>,
+    pub created_at: DateTime<Utc>,
+}
+
 #[derive(Debug, Clone)]
 pub struct NewOperation {
     pub block_number: i64,
@@ -82,6 +112,34 @@ pub struct NewExecutedTransaction {
     pub created_at: DateTime<Utc>,
     pub eth_sign_data: Option<serde_json::Value>,
     pub batch_id: Option<i64>,
+}
+
+#[derive(Debug, Clone)]
+pub struct NewExecutedTxAndPriorityOperation {
+    //layer1
+    pub priority_op_serialid: i64,
+    pub deadline_block: i64,
+    pub eth_block: i64,
+
+    //layer2
+    pub tx: Value,
+    pub success: bool,
+    pub fail_reason: Option<String>,
+    pub primary_account_address: Vec<u8>,
+    pub nonce: i64,
+    pub eth_sign_data: Option<serde_json::Value>,
+    pub batch_id: Option<i64>,
+
+    //common
+    pub eth_or_tx_hash: Vec<u8>,
+    //eth_hash or tx_hash
+    pub block_number: i64,
+    pub block_index: Option<i32>,
+    pub operation: Value,
+    pub op_type: i64,
+    pub from_account: Vec<u8>,
+    pub to_account: Option<Vec<u8>>,
+    pub created_at: DateTime<Utc>,
 }
 
 #[derive(Debug, Clone)]

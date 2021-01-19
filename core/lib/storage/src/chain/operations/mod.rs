@@ -1,17 +1,22 @@
 // Built-in deps
 use std::time::Instant;
+
 // External imports
 use anyhow::format_err;
+
+use zksync_basic_types::H256;
 // Workspace imports
 use zksync_types::{ethereum::CompleteWithdrawalsTx, tx::TxHash, ActionType, BlockNumber};
+
+use crate::{chain::mempool::MempoolSchema, QueryResult, StorageProcessor};
+
 // Local imports
 use self::records::{
-    NewExecutedPriorityOperation, NewExecutedTransaction, NewOperation,
-    StoredCompleteWithdrawalsTransaction, StoredExecutedPriorityOperation,
-    StoredExecutedTransaction, StoredOperation, StoredPendingWithdrawal,
+    NewExecutedPriorityOperation, NewExecutedTransaction, NewExecutedTxAndPriorityOperation,
+    NewOperation, StoredCompleteWithdrawalsTransaction, StoredExecutedPriorityOperation,
+    StoredExecutedTransaction, StoredExecutedTxAndPriorityOperation, StoredOperation,
+    StoredPendingWithdrawal,
 };
-use crate::{chain::mempool::MempoolSchema, QueryResult, StorageProcessor};
-use zksync_basic_types::H256;
 
 pub mod records;
 
@@ -33,10 +38,10 @@ impl<'a, 'c> OperationsSchema<'a, 'c> {
             action_type.to_string(),
             confirmed.map(|value| !value)
         )
-        .fetch_one(self.0.conn())
-        .await?
-        .max
-        .unwrap_or(0);
+            .fetch_one(self.0.conn())
+            .await?
+            .max
+            .unwrap_or(0);
 
         metrics::histogram!(
             "sql.chain.operations.get_last_block_by_action",
@@ -98,6 +103,220 @@ impl<'a, 'c> OperationsSchema<'a, 'c> {
         )
         .fetch_optional(self.0.conn())
         .await?;
+
+        metrics::histogram!(
+            "sql.chain.operations.get_executed_priority_operation",
+            start.elapsed()
+        );
+        Ok(op)
+    }
+
+    pub async fn get_executed_tx_and_priority_operation(
+        &mut self,
+        op_type: i64,
+        page: i64,
+        page_size: i64,
+    ) -> QueryResult<Vec<StoredExecutedTxAndPriorityOperation>> {
+        let start = Instant::now();
+        let op;
+        if op_type <= 0 {
+            op = sqlx::query_as!(
+            StoredExecutedTxAndPriorityOperation,
+            "SELECT * FROM executed_tx_and_priority_operations order by created_at desc limit $1 offset $2",
+            page_size,
+            (page-1) * page_size
+            )
+                .fetch_all(self.0.conn())
+                .await?;
+        } else {
+            op = sqlx::query_as!(
+            StoredExecutedTxAndPriorityOperation,
+            "SELECT * FROM executed_tx_and_priority_operations WHERE op_type = $1 order by created_at desc limit $2 offset $3",
+            op_type,
+            page_size,
+            (page-1) * page_size
+            )
+                .fetch_all(self.0.conn())
+                .await?;
+        }
+
+        metrics::histogram!(
+            "sql.chain.operations.get_executed_priority_operation",
+            start.elapsed()
+        );
+        Ok(op)
+    }
+
+    pub async fn get_executed_tx_and_priority_operation_from(
+        &mut self,
+        op_type: i64,
+        page: i64,
+        page_size: i64,
+        from: Vec<u8>,
+    ) -> QueryResult<Vec<StoredExecutedTxAndPriorityOperation>> {
+        let start = Instant::now();
+        let op;
+        if op_type <= 0 {
+            op = sqlx::query_as!(
+            StoredExecutedTxAndPriorityOperation,
+            "SELECT * FROM executed_tx_and_priority_operations where from_account = $1 order by created_at desc limit $2 offset $3",
+            from,
+            page_size,
+            (page-1) * page_size
+            )
+                .fetch_all(self.0.conn())
+                .await?;
+        } else {
+            op = sqlx::query_as!(
+            StoredExecutedTxAndPriorityOperation,
+            "SELECT * FROM executed_tx_and_priority_operations WHERE from_account = $1 and op_type = $2 order by created_at desc limit $3 offset $4",
+            from,
+            op_type,
+            page_size,
+            (page-1) * page_size
+            )
+                .fetch_all(self.0.conn())
+                .await?;
+        }
+
+        metrics::histogram!(
+            "sql.chain.operations.get_executed_priority_operation",
+            start.elapsed()
+        );
+        Ok(op)
+    }
+
+    pub async fn get_executed_tx_and_priority_operation_to(
+        &mut self,
+        op_type: i64,
+        page: i64,
+        page_size: i64,
+        to: Vec<u8>,
+    ) -> QueryResult<Vec<StoredExecutedTxAndPriorityOperation>> {
+        let start = Instant::now();
+        let op;
+        if op_type <= 0 {
+            op = sqlx::query_as!(
+            StoredExecutedTxAndPriorityOperation,
+            "SELECT * FROM executed_tx_and_priority_operations where to_account = $1 order by created_at desc limit $2 offset $3",
+            to,
+            page_size,
+            (page-1) * page_size
+            )
+                .fetch_all(self.0.conn())
+                .await?;
+        } else {
+            op = sqlx::query_as!(
+            StoredExecutedTxAndPriorityOperation,
+            "SELECT * FROM executed_tx_and_priority_operations WHERE to_account = $1 and op_type = $2 order by created_at desc limit $3 offset $4",
+            to,
+            op_type,
+            page_size,
+            (page-1) * page_size
+            )
+                .fetch_all(self.0.conn())
+                .await?;
+        }
+
+        metrics::histogram!(
+            "sql.chain.operations.get_executed_priority_operation",
+            start.elapsed()
+        );
+        Ok(op)
+    }
+
+    pub async fn get_executed_tx_and_priority_operation_total(
+        &mut self,
+        op_type: i64,
+    ) -> QueryResult<i64> {
+        let start = Instant::now();
+        let op;
+        if op_type <= 0 {
+            op = sqlx::query!("SELECT COUNT(*) FROM executed_tx_and_priority_operations")
+                .fetch_one(self.0.conn())
+                .await?
+                .count
+                .unwrap_or(0);
+        } else {
+            op = sqlx::query!(
+                "SELECT COUNT(*) FROM executed_tx_and_priority_operations WHERE op_type = $1",
+                op_type
+            )
+            .fetch_one(self.0.conn())
+            .await?
+            .count
+            .unwrap_or(0);
+        }
+
+        metrics::histogram!(
+            "sql.chain.operations.get_executed_priority_operation",
+            start.elapsed()
+        );
+        Ok(op)
+    }
+
+    pub async fn get_executed_tx_and_priority_operation_total_from(
+        &mut self,
+        op_type: i64,
+        from: Vec<u8>,
+    ) -> QueryResult<i64> {
+        let start = Instant::now();
+        let op;
+        if op_type <= 0 {
+            op = sqlx::query!(
+                "SELECT COUNT(*) FROM executed_tx_and_priority_operations where from_account = $1",
+                from
+            )
+            .fetch_one(self.0.conn())
+            .await?
+            .count
+            .unwrap_or(0);
+        } else {
+            op = sqlx::query!(
+            "SELECT COUNT(*) FROM executed_tx_and_priority_operations WHERE op_type = $1 and from_account = $2",
+            op_type,
+            from
+            )
+                .fetch_one(self.0.conn())
+                .await?
+                .count
+                .unwrap_or(0);
+        }
+
+        metrics::histogram!(
+            "sql.chain.operations.get_executed_priority_operation",
+            start.elapsed()
+        );
+        Ok(op)
+    }
+
+    pub async fn get_executed_tx_and_priority_operation_total_to(
+        &mut self,
+        op_type: i64,
+        to: Vec<u8>,
+    ) -> QueryResult<i64> {
+        let start = Instant::now();
+        let op;
+        if op_type <= 0 {
+            op = sqlx::query!(
+                "SELECT COUNT(*) FROM executed_tx_and_priority_operations where to_account = $1",
+                to
+            )
+            .fetch_one(self.0.conn())
+            .await?
+            .count
+            .unwrap_or(0);
+        } else {
+            op = sqlx::query!(
+            "SELECT COUNT(*) FROM executed_tx_and_priority_operations WHERE op_type = $1 and to_account = $2",
+            op_type,
+            to
+            )
+                .fetch_one(self.0.conn())
+                .await?
+                .count
+                .unwrap_or(0);
+        }
 
         metrics::histogram!(
             "sql.chain.operations.get_executed_priority_operation",
@@ -204,8 +423,8 @@ impl<'a, 'c> OperationsSchema<'a, 'c> {
                 operation.eth_sign_data,
                 operation.batch_id,
             )
-            .execute(transaction.conn())
-            .await?;
+                .execute(transaction.conn())
+                .await?;
         } else {
             // If transaction failed, we do nothing on conflict.
             sqlx::query!(
@@ -228,8 +447,8 @@ impl<'a, 'c> OperationsSchema<'a, 'c> {
                 operation.eth_sign_data,
                 operation.batch_id,
             )
-            .execute(transaction.conn())
-            .await?;
+                .execute(transaction.conn())
+                .await?;
         };
 
         transaction.commit().await?;
@@ -263,12 +482,75 @@ impl<'a, 'c> OperationsSchema<'a, 'c> {
             operation.eth_block,
             operation.created_at,
         )
-        .execute(self.0.conn())
-        .await?;
+            .execute(self.0.conn())
+            .await?;
         metrics::histogram!(
             "sql.chain.operations.store_executed_priority_op",
             start.elapsed()
         );
+        Ok(())
+    }
+
+    // //layer1
+    // pub priority_op_serialid: i64,
+    // pub deadline_block: i64,
+    // pub eth_block: i64,
+    //
+    // //layer2
+    // pub tx: Value,
+    // pub success: bool,
+    // pub fail_reason: Option<String>,
+    // pub primary_account_address: Vec<u8>,
+    // pub nonce: i64,
+    // pub eth_sign_data: Option<serde_json::Value>,
+    // pub batch_id: Option<i64>,
+    //
+    // //common
+    // pub eth_or_tx_hash: Vec<u8>,//eth_hash or tx_hash
+    // pub block_number: i64,
+    // pub block_index: Option<i32>,
+    // pub operation: Value,
+    // pub from_account: Vec<u8>,
+    // pub to_account: Option<Vec<u8>>,
+    // pub created_at: DateTime<Utc>,
+    /// Stores executed tx and  priority operation in database.
+    #[doc = "hidden"]
+    pub async fn store_executed_tx_and_priority_op(
+        &mut self,
+        operation: NewExecutedTxAndPriorityOperation,
+    ) -> QueryResult<()> {
+        let start = Instant::now();
+        sqlx::query!(
+                    "INSERT INTO executed_tx_and_priority_operations (priority_op_serialid, deadline_block, eth_block, tx, success, fail_reason, primary_account_address, nonce, eth_sign_data, batch_id, eth_or_tx_hash, block_number, block_index, operation, op_type, from_account, to_account, created_at)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+                    ON CONFLICT (eth_or_tx_hash)
+                    DO NOTHING",
+                    operation.priority_op_serialid,
+                    operation.deadline_block,
+                    operation.eth_block,
+                    operation.tx,
+                    operation.success,
+                    operation.fail_reason,
+                    operation.primary_account_address,
+                    operation.nonce,
+                    operation.eth_sign_data,
+                    operation.batch_id,
+                    operation.eth_or_tx_hash,
+                    operation.block_number,
+                    operation.block_index,
+                    operation.operation,
+                    operation.op_type,
+                    operation.from_account,
+                    operation.to_account,
+                    operation.created_at,
+                    )
+            .execute(self.0.conn())
+            .await?;
+        metrics::histogram!(
+            "sql.chain.operations.store_executed_tx_and_priority_op",
+            start.elapsed()
+        );
+
         Ok(())
     }
 
@@ -325,8 +607,8 @@ impl<'a, 'c> OperationsSchema<'a, 'c> {
             tx.pending_withdrawals_queue_start_index as i64,
             tx.pending_withdrawals_queue_end_index as i64,
         )
-        .execute(self.0.conn())
-        .await?;
+            .execute(self.0.conn())
+            .await?;
         metrics::histogram!(
             "sql.chain.operations.add_complete_withdrawals_transaction",
             start.elapsed()

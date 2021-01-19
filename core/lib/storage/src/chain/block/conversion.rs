@@ -4,8 +4,10 @@
 
 // Built-in deps
 use std::convert::TryFrom;
+
 // External imports
 // Workspace imports
+use zksync_types::SignedZkSyncTx;
 use zksync_types::{
     Action, ActionType, Operation,
     {
@@ -13,19 +15,20 @@ use zksync_types::{
         BlockNumber, PriorityOp, ZkSyncOp, ZkSyncTx,
     },
 };
+
 // Local imports
 use crate::{
     chain::{
         block::BlockSchema,
         operations::records::{
-            NewExecutedPriorityOperation, NewExecutedTransaction, StoredExecutedPriorityOperation,
+            NewExecutedPriorityOperation, NewExecutedTransaction,
+            NewExecutedTxAndPriorityOperation, StoredExecutedPriorityOperation,
             StoredExecutedTransaction, StoredOperation,
         },
     },
     prover::ProverSchema,
     QueryResult, StorageProcessor,
 };
-use zksync_types::SignedZkSyncTx;
 
 impl StoredOperation {
     pub async fn into_op(self, conn: &mut StorageProcessor<'_>) -> QueryResult<Operation> {
@@ -187,6 +190,127 @@ impl NewExecutedTransaction {
             created_at: exec_tx.created_at,
             eth_sign_data,
             batch_id: exec_tx.batch_id,
+        }
+    }
+}
+
+impl NewExecutedTxAndPriorityOperation {
+    pub fn prepare_stored_data_from_tx(exec_tx: ExecutedTx, block: BlockNumber) -> Self {
+        fn cut_prefix(input: &str) -> String {
+            if let Some(input) = input.strip_prefix("0x") {
+                input.into()
+            } else if let Some(input) = input.strip_prefix("sync:") {
+                input.into()
+            } else {
+                input.into()
+            }
+        }
+
+        let tx = serde_json::to_value(&exec_tx.signed_tx.tx).expect("Cannot serialize tx");
+        let operation = serde_json::to_value(&exec_tx.op).expect("Cannot serialize operation");
+
+        let (from_account_hex, to_account_hex): (String, Option<String>) =
+            match exec_tx.signed_tx.tx {
+                ZkSyncTx::Withdraw(_) | ZkSyncTx::Transfer(_) => (
+                    serde_json::from_value(tx["from"].clone()).unwrap(),
+                    serde_json::from_value(tx["to"].clone()).unwrap(),
+                ),
+                ZkSyncTx::ChangePubKey(_) => (
+                    serde_json::from_value(tx["account"].clone()).unwrap(),
+                    serde_json::from_value(tx["newPkHash"].clone()).unwrap(),
+                ),
+                ZkSyncTx::Close(_) => (
+                    serde_json::from_value(tx["account"].clone()).unwrap(),
+                    serde_json::from_value(tx["account"].clone()).unwrap(),
+                ),
+                ZkSyncTx::ForcedExit(_) => (
+                    serde_json::from_value(tx["target"].clone()).unwrap(),
+                    serde_json::from_value(tx["target"].clone()).unwrap(),
+                ),
+            };
+
+        let from_account: Vec<u8> = hex::decode(cut_prefix(&from_account_hex)).unwrap();
+        let to_account: Option<Vec<u8>> =
+            to_account_hex.map(|value| hex::decode(cut_prefix(&value)).unwrap());
+
+        let eth_sign_data = exec_tx.signed_tx.eth_sign_data.as_ref().map(|sign_data| {
+            serde_json::to_value(sign_data).expect("Failed to encode EthSignData")
+        });
+
+        Self {
+            //layer 1
+            eth_block: 0,
+            priority_op_serialid: 0,
+            deadline_block: 0,
+
+            //layer2
+            tx,
+            operation,
+            success: exec_tx.success,
+            fail_reason: exec_tx.fail_reason,
+            primary_account_address: exec_tx.signed_tx.account().as_bytes().to_vec(),
+            nonce: exec_tx.signed_tx.nonce() as i64,
+            eth_sign_data,
+            batch_id: exec_tx.batch_id,
+            //share
+            created_at: exec_tx.created_at,
+            block_index: exec_tx.block_index.map(|idx| idx as i32),
+            block_number: i64::from(block),
+            eth_or_tx_hash: exec_tx.signed_tx.hash().as_ref().to_vec(),
+            from_account,
+            to_account,
+            op_type: (|zop: Option<&ZkSyncOp>| -> i64 {
+                if let Some(op) = zop {
+                    op.get_type()
+                } else {
+                    0
+                }
+            })(exec_tx.op.as_ref()),
+        }
+    }
+
+    pub fn prepare_stored_data_from_priority_op(
+        exec_prior_op: ExecutedPriorityOp,
+        block: BlockNumber,
+    ) -> Self {
+        let exec_prior_op2 = exec_prior_op.clone();
+        let operation = serde_json::to_value(&exec_prior_op.op).unwrap();
+
+        let (from_account, to_account) = match exec_prior_op.op {
+            ZkSyncOp::Deposit(deposit) => (deposit.priority_op.from, deposit.priority_op.to),
+            ZkSyncOp::FullExit(full_exit) => {
+                let eth_address = full_exit.priority_op.eth_address;
+                (eth_address, eth_address)
+            }
+            _ => panic!(
+                "Incorrect type of priority op: {:?}",
+                exec_prior_op.priority_op
+            ),
+        };
+
+        Self {
+            //layer1
+            eth_block: exec_prior_op.priority_op.eth_block as i64,
+            priority_op_serialid: exec_prior_op.priority_op.serial_id as i64,
+            deadline_block: exec_prior_op.priority_op.deadline_block as i64,
+
+            //layer2
+            operation,
+            tx: Default::default(),
+            success: false,
+            fail_reason: None,
+            primary_account_address: vec![],
+            nonce: 0,
+            eth_sign_data: None,
+            batch_id: None,
+
+            eth_or_tx_hash: exec_prior_op.priority_op.eth_hash,
+            created_at: exec_prior_op.created_at,
+            from_account: from_account.as_ref().to_vec(),
+            to_account: Some(to_account.as_ref().to_vec()),
+            block_number: i64::from(block),
+            block_index: Some(exec_prior_op.block_index as i32),
+            op_type: exec_prior_op2.op.get_type(),
         }
     }
 }

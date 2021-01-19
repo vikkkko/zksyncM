@@ -1,16 +1,19 @@
 //! zkSync network block definition.
 
-use super::PriorityOp;
-use super::ZkSyncOp;
-use super::{AccountId, BlockNumber, Fr};
-use crate::SignedZkSyncTx;
 use chrono::DateTime;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
+
 use zksync_basic_types::{H256, U256};
 use zksync_crypto::franklin_crypto::bellman::pairing::ff::{PrimeField, PrimeFieldRepr};
 use zksync_crypto::params::CHUNK_BIT_WIDTH;
 use zksync_crypto::serialization::FrSerde;
+
+use crate::SignedZkSyncTx;
+
+use super::PriorityOp;
+use super::ZkSyncOp;
+use super::{AccountId, BlockNumber, Fr};
 
 /// An intermediate state of the block in the zkSync network.
 /// Contains the information about (so far) executed transactions and
@@ -53,6 +56,25 @@ pub struct ExecutedPriorityOp {
     pub priority_op: PriorityOp,
     pub op: ZkSyncOp,
     pub block_index: u32,
+    pub created_at: DateTime<Utc>,
+}
+
+/// L1 and L2
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ExecutedTxAndPriorityOp {
+    // only L2 data
+    pub signed_tx: SignedZkSyncTx,
+    pub success: bool,
+    pub fail_reason: Option<String>,
+    pub batch_id: Option<i64>,
+
+    //only L1 data
+    pub priority_op: PriorityOp,
+
+    //L1 and L2 shared data
+    pub op_type: Option<String>,
+    pub op: Option<ZkSyncOp>,
+    pub block_index: Option<u32>,
     pub created_at: DateTime<Utc>,
 }
 

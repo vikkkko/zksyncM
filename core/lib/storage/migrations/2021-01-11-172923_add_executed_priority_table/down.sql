@@ -1,0 +1,10 @@
+
+DROP INDEX executed_tx_and_priority_operations_block_number_index;
+DROP INDEX executed_tx_and_priority_operations_hash_index;
+DROP INDEX executed_tx_and_priority_operations_from_account_index;
+DROP INDEX executed_tx_and_priority_operations_to_account_index;
+DROP INDEX executed_tx_and_priority_operations_serialid_index;
+
+
+DROP TABLE IF EXISTS executed_tx_and_priority_operations;
+
