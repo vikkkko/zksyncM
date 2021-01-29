@@ -56,9 +56,8 @@ async function checkEnv() {
     }
 }
 
-export const command = new Command('init')
-    .description('perform zksync network initialization for development');
-    // .action(init);
+export const command = new Command('init').description('perform zksync network initialization for development');
+// .action(init);
 
-command.command("with-docker-pg").description("init with docker pg").action(init);
-command.command("no-docker-pg").description("init with not docker pg").action(initWithOtherPg);
+command.command('with-docker-pg').description('init with docker pg').action(init);
+command.command('no-docker-pg').description('init with not docker pg').action(initWithOtherPg);
