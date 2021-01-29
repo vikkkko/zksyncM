@@ -26,6 +26,24 @@ export async function init() {
     await contract.redeploy();
 }
 
+export async function initWithOtherPg() {
+    if (!process.env.CI) {
+        await checkEnv();
+        await env.gitHooks();
+        // await up();
+    }
+    await utils.allowFail(run.yarn());
+    await run.plonkSetup();
+    await run.verifyKeys.unpack();
+    await db.setup();
+    await contract.buildDev();
+    // await run.deployERC20('dev');
+    await run.deployEIP1271();
+    await contract.build();
+    await server.genesis();
+    await contract.redeploy();
+}
+
 async function checkEnv() {
     const tools = ['node', 'yarn', 'docker', 'docker-compose', 'cargo', 'psql', 'pg_isready', 'diesel', 'solc'];
     for (const tool of tools) {
@@ -39,5 +57,8 @@ async function checkEnv() {
 }
 
 export const command = new Command('init')
-    .description('perform zksync network initialization for development')
-    .action(init);
+    .description('perform zksync network initialization for development');
+    // .action(init);
+
+command.command("with-docker-pg").description("init with docker pg").action(init);
+command.command("no-docker-pg").description("init with not docker pg").action(initWithOtherPg);
